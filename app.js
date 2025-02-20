@@ -14,7 +14,7 @@ import uploadRoutes from './routes/uploadRoutes.js';
 import feedbackRoutes from "./routes/feedbackRoutes.js";
 import copyrightRoutes from './routes/copyrightRoutes.js';
 import dsrcRoutes from "./routes/dsrcRoutes.js";
-import playlistRoutes from "./routes/playlistRoutes.js";
+import playlistRoutes from './routes/playlistRoutes.js';
 import dsrcCopyrightRoutes from './routes/dsrcCopyrightRoutes.js';
 import followRoutes from './routes/followRoutes.js';
 import heartRoutes from './routes/heartRoutes.js';
@@ -29,42 +29,17 @@ await connectDB();
 
 const app = express();
 
-// CORS Configuration
+// CORS Configuration (Simplified and Global)
 const corsOptions = {
   origin: [
     'http://localhost:7000',
     'http://localhost:3000',
     'https://app.hitmakr.io',
   ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: [
-    'Content-Type',
-    'Authorization',
-    'x-chain-id',
-    'X-Chain-Id',
-    'x-user-address',
-    'X-User-Address',
-    'x-nonce-token',
-    'X-Nonce-Token',
-    'Accept',
-    'Origin',
-  ],
-  exposedHeaders: [
-    'Authorization',
-    'x-chain-id',
-    'X-Chain-Id',
-    'x-user-address',
-    'X-User-Address',
-    'x-nonce-token',
-    'X-Nonce-Token'
-  ],
-  credentials: true,
-  maxAge: 86400,
-  preflightContinue: false,
-  optionsSuccessStatus: 204
+  credentials: true // Allow cookies and authorization headers
 };
 
-// Apply CORS before other middleware
+// Apply CORS globally as the FIRST middleware
 app.use(cors(corsOptions));
 
 // Security configurations
@@ -127,7 +102,7 @@ if (process.env.NODE_ENV === 'production') {
 const apiRoutes = [
   { path: '/upload', router: uploadRoutes },
   { path: '/feedback', router: feedbackRoutes },
-  { path: '/copyright', router: copyrightRoutes },
+  { path: '/copyright', router: copyrightRoutes }, // CORS is applied globally, no need here
   { path: '/dsrc', router: dsrcRoutes },
   { path: '/playlist', router: playlistRoutes },
   { path: '/dsrc-copyright', router: dsrcCopyrightRoutes },
@@ -139,15 +114,20 @@ const apiRoutes = [
 ];
 
 apiRoutes.forEach(({ path, router }) => {
-  app.use(path, cors(corsOptions), router);
+  app.use(path, router); // No cors(corsOptions) here anymore, it's global
 });
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ 
+  res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString()
   });
+});
+
+// **TEST ENDPOINT for CORS verification**
+app.get('/test-cors', (req, res) => {
+    res.json({ message: 'CORS is working!' });
 });
 
 // Request logging middleware
@@ -160,7 +140,7 @@ app.use((req, res, next) => {
 
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({ 
+  res.status(404).json({
     error: 'Route not found',
     path: req.path
   });
@@ -169,10 +149,10 @@ app.use((req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error details:', err);
-  
+
   const errorResponse = {
-    error: process.env.NODE_ENV === 'production' 
-      ? 'Internal Server Error' 
+    error: process.env.NODE_ENV === 'production'
+      ? 'Internal Server Error'
       : err.message,
     status: err.status || 500
   };
@@ -180,7 +160,7 @@ app.use((err, req, res, next) => {
   if (process.env.NODE_ENV !== 'production') {
     errorResponse.stack = err.stack;
   }
-  
+
   res.status(errorResponse.status).json(errorResponse);
 });
 
