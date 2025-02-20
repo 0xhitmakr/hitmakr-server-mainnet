@@ -32,9 +32,9 @@ const app = express();
 // CORS Configuration
 const corsOptions = {
   origin: [
-    'http://localhost:7000',
     'http://localhost:3000',
-    'https://app.hitmakr.io'
+    'http://192.168.29.152:3000',
+    'https://app.hitmakr.io',
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: [
