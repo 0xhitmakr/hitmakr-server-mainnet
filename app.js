@@ -30,31 +30,31 @@ await connectDB();
 const app = express();
 
 // CORS Configuration
-const corsOptions = {
-  origin: [
-    'http://localhost:7000',
-    'http://localhost:3000',
-    'https://app.hitmakr.io'
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: '*',
-  exposedHeaders: [
-    'Authorization',
-    'x-chain-id',
-    'X-Chain-Id',
-    'x-user-address',
-    'X-User-Address',
-    'x-nonce-token',
-    'X-Nonce-Token'
-  ],
-  credentials: true,
-  maxAge: 86400,
-  preflightContinue: false,
-  optionsSuccessStatus: 204
-};
+// const corsOptions = {
+//   origin: [
+//     'http://localhost:7000',
+//     'http://localhost:3000',
+//     'https://app.hitmakr.io'
+//   ],
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//   allowedHeaders: '*',
+//   exposedHeaders: [
+//     'Authorization',
+//     'x-chain-id',
+//     'X-Chain-Id',
+//     'x-user-address',
+//     'X-User-Address',
+//     'x-nonce-token',
+//     'X-Nonce-Token'
+//   ],
+//   credentials: true,
+//   maxAge: 86400,
+//   preflightContinue: false,
+//   optionsSuccessStatus: 204
+// };
 
-// Apply CORS before other middleware
-app.use(cors(corsOptions));
+// // Apply CORS before other middleware
+// app.use(cors(corsOptions));
 
 // Security configurations
 app.use(helmet({
