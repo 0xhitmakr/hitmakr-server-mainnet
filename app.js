@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
@@ -28,38 +29,45 @@ await connectDB();
 
 const app = express();
 
-// Custom CORS middleware implementation
-const customCorsMiddleware = (req, res, next) => {
-  // Allow all origins
-  res.header('Access-Control-Allow-Origin', '*');
-  
-  // Allow common methods
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  
-  // Allow all headers that might be sent
-  res.header('Access-Control-Allow-Headers', 
-    'Origin, X-Requested-With, Content-Type, Accept, Authorization, ' +
-    'x-chain-id, X-Chain-Id, x-user-address, X-User-Address, ' + 
-    'x-nonce-token, X-Nonce-Token');
-  
-  // Expose headers that clients might need to access
-  res.header('Access-Control-Expose-Headers',
-    'Authorization, x-chain-id, X-Chain-Id, x-user-address, X-User-Address, ' +
-    'x-nonce-token, X-Nonce-Token');
-  
-  // Cache preflight response for 1 day (86400 seconds)
-  res.header('Access-Control-Max-Age', '86400');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end();
-  }
-  
-  next();
+// CORS Configuration
+const corsOptions = {
+  origin: [
+    'http://localhost:7000',
+    'http://localhost:3000',
+    'https://app.hitmakr.io'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'x-chain-id',
+    'X-Chain-Id',
+    'x-user-address',
+    'X-User-Address',
+    'x-nonce-token',
+    'X-Nonce-Token',
+    'Accept',
+    'Origin',
+    'Access-Control-Allow-Origin',
+    'Access-Control-Allow-Headers'
+  ],
+  exposedHeaders: [
+    'Authorization',
+    'x-chain-id',
+    'X-Chain-Id',
+    'x-user-address',
+    'X-User-Address',
+    'x-nonce-token',
+    'X-Nonce-Token'
+  ],
+  credentials: true,
+  maxAge: 86400,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 
-// Apply custom CORS middleware before other middleware
-app.use(customCorsMiddleware);
+// Apply CORS before other middleware
+app.use(cors(corsOptions));
 
 // Security configurations
 app.use(helmet({
@@ -132,9 +140,8 @@ const apiRoutes = [
   { path: '/user', router: userRoutes }
 ];
 
-// Apply routes without cors middleware
 apiRoutes.forEach(({ path, router }) => {
-  app.use(path, router);
+  app.use(path, cors(corsOptions), router);
 });
 
 // Health check endpoint
