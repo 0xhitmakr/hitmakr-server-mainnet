@@ -34,7 +34,8 @@ const corsOptions = {
   origin: [
     'http://localhost:7000',
     'http://localhost:3000',
-    'https://app.hitmakr.io'
+    'https://app.hitmakr.io',
+    'https://mainnetapi.hitmakr.io'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: [
