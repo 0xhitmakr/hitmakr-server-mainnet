@@ -35,7 +35,6 @@ const corsOptions = {
     'http://localhost:7000',
     'http://localhost:3000',
     'https://app.hitmakr.io',
-    'https://mainnetapi.hitmakr.io'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: [
@@ -49,8 +48,6 @@ const corsOptions = {
     'X-Nonce-Token',
     'Accept',
     'Origin',
-    'Access-Control-Allow-Origin',
-    'Access-Control-Allow-Headers'
   ],
   exposedHeaders: [
     'Authorization',
