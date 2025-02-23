@@ -57,20 +57,11 @@ export const verifierCreateDSRC = async (dsrcData) => {
         const formattedRecipients = recipients.map(addr => validateAddress(addr));
 
         // Validate inputs before sending
-        if (!tokenURI || tokenURI.length === 0) {
-            throw new Error('Invalid tokenURI');
-        }
-        if (!formattedRecipients || formattedRecipients.length === 0) {
-            throw new Error('Invalid recipients');
-        }
-        if (!percentages || percentages.length === 0) {
-            throw new Error('Invalid percentages');
-        }
-        if (!selectedChain || selectedChain.length === 0) {
-            throw new Error('Invalid chain');
-        }
+        if (!tokenURI || tokenURI.length === 0) throw new Error('Invalid tokenURI');
+        if (!formattedRecipients || formattedRecipients.length === 0) throw new Error('Invalid recipients');
+        if (!percentages || percentages.length === 0) throw new Error('Invalid percentages');
+        if (!selectedChain || selectedChain.length === 0) throw new Error('Invalid chain');
 
-        // Execute transaction using VerifierManager
         return await verifierManager.executeTransaction(async (wallet) => {
             const contract = new Contract(CONTRACT_ADDRESS, abi, wallet);
             const controlCenter = new Contract(CONTROL_CENTER_ADDRESS, controlCenterAbi, provider);
@@ -78,15 +69,8 @@ export const verifierCreateDSRC = async (dsrcData) => {
             const verifierRole = await controlCenter.VERIFIER_ROLE();
             const hasRole = await controlCenter.hasRole(verifierRole, wallet.address);
 
-            console.log('Verifier role check:', {
-                address: wallet.address,
-                verifierRole,
-                hasRole
-            });
-
-            if (!hasRole) {
-                throw new Error('Verifier does not have required role');
-            }
+            console.log('Verifier role check:', { address: wallet.address, verifierRole, hasRole });
+            if (!hasRole) throw new Error('Verifier does not have required role');
 
             console.log('Calling createDSRC with parameters:', {
                 tokenURI,
@@ -97,7 +81,10 @@ export const verifierCreateDSRC = async (dsrcData) => {
                 selectedChain
             });
 
-            // Try to simulate the transaction first
+            // Predict DSRC ID before simulation for fallback verification
+            const predictedDsrcId = await predictDsrcId(formattedRecipients[0], contract); // Assuming first recipient is creator
+
+            // Simulate the transaction
             try {
                 await contract.createDSRC.staticCall(
                     tokenURI,
@@ -106,112 +93,68 @@ export const verifierCreateDSRC = async (dsrcData) => {
                     formattedRecipients,
                     percentages,
                     selectedChain,
-                    { gasLimit: DEFAULT_GAS_LIMIT }
+                    { gasLimit: DEFAULT_GAS_LIMIT, from: wallet.address }
                 );
+                console.log('Transaction simulation successful');
             } catch (error) {
                 console.log('Simulation failed:', {
                     error: error.message,
                     data: error.data,
-                    revertData: error.revertData,
                     reason: error.reason
                 });
-                
-                // Handle common error patterns
-                if (error.message && error.message.includes("gas required exceeds")) {
-                    throw new Error('Network congestion detected');
-                }
-                
                 if (error.data) {
                     try {
                         const decodedError = contractInterface.parseError(error.data);
-                        console.log('Decoded error:', decodedError);
-                        throw new Error(`Contract error: ${decodedError.name}`);
+                        throw new Error(`Upload Verifiers are Busy Please try again in a bit`);
                     } catch (e) {
-                        // If we can't decode the error, throw a user-friendly message
-                        throw new Error('Upload network is busy please try again in a minute.');
+                        throw new Error('Upload Verifiers are Busy Please try again in a bit');
                     }
                 }
-                
-                // Default user-friendly error
-                throw new Error('Upload network is busy please try again in a minute.');
+                throw new Error('Upload Verifiers are Busy Please try again in a bit');
             }
 
-            console.log('Transaction simulation successful, sending transaction...');
-            
-            try {
-                const tx = await contract.createDSRC(
-                    tokenURI,
-                    BigInt(collectorsPrice),
-                    BigInt(licensingPrice),
-                    formattedRecipients,
-                    percentages,
-                    selectedChain,
-                    { gasLimit: DEFAULT_GAS_LIMIT }
-                );
+            // Simulation passed, send the transaction
+            console.log('Sending transaction...');
+            const tx = await contract.createDSRC(
+                tokenURI,
+                BigInt(collectorsPrice),
+                BigInt(licensingPrice),
+                formattedRecipients,
+                percentages,
+                selectedChain,
+                { gasLimit: DEFAULT_GAS_LIMIT }
+            );
 
-                console.log('Transaction Sent:', tx.hash);
-                console.log('Transaction data:', tx.data);
+            console.log('Transaction Sent:', tx.hash);
+            const receipt = await tx.wait();
 
-                const receipt = await tx.wait();
+            console.log('Transaction receipt:', {
+                status: receipt.status,
+                gasUsed: receipt.gasUsed.toString(),
+                logs: receipt.logs.map(log => ({
+                    topics: log.topics,
+                    data: log.data
+                }))
+            });
 
-                console.log('Transaction receipt:', {
-                    status: receipt.status,
-                    gasUsed: receipt.gasUsed.toString(),
-                    blockNumber: receipt.blockNumber,
-                    effectiveGasPrice: receipt.effectiveGasPrice?.toString(),
-                    from: receipt.from,
-                    to: receipt.to,
-                    contractAddress: receipt.contractAddress,
-                    type: receipt.type,
-                    logs: receipt.logs.map(log => {
-                        try {
-                            const decoded = contractInterface.parseLog({
-                                topics: [...log.topics],
-                                data: log.data
-                            });
-                            return {
-                                name: decoded.name,
-                                args: decoded.args,
-                                raw: {
-                                    topics: log.topics,
-                                    data: log.data
-                                }
-                            };
-                        } catch (e) {
-                            return {
-                                error: 'Could not decode log',
-                                raw: {
-                                    topics: log.topics,
-                                    data: log.data
-                                }
-                            };
-                        }
-                    })
-                });
+            // Check transaction status
+            if (receipt.status !== 1) {
+                throw new Error('Transaction failed on-chain');
+            }
 
-                if (!receipt.status) {
-                    throw new Error('Upload network is busy please try again in a minute.');
+            // Look for DSRCCreated event
+            let dsrcCreatedEvent = receipt.logs.find(log => {
+                try {
+                    const event = contractInterface.parseLog({ topics: [...log.topics], data: log.data });
+                    return event.name === 'DSRCCreated';
+                } catch (e) {
+                    return false;
                 }
+            });
 
-                const dsrcCreatedEvent = receipt.logs.find(log => {
-                    try {
-                        const event = contractInterface.parseLog({ topics: [...log.topics], data: log.data });
-                        return event.name === 'DSRCCreated';
-                    } catch(e) {
-                        return false;
-                    }
-                });
-
-                if (!dsrcCreatedEvent) {
-                    return {
-                        success: false,
-                        error: 'Upload network is busy please try again in a minute.',
-                        transactionHash: tx.hash
-                    };
-                }
-
+            if (dsrcCreatedEvent) {
+                console.log('DSRCCreated event found:', dsrcCreatedEvent.args);
                 dsrcCache.clear();
-
                 return {
                     success: true,
                     transactionHash: tx.hash,
@@ -219,19 +162,61 @@ export const verifierCreateDSRC = async (dsrcData) => {
                     dsrcId: dsrcCreatedEvent.args.dsrcId,
                     receipt
                 };
-            } catch (txError) {
-                console.error('Transaction execution error:', txError);
-                throw new Error('Upload network is busy please try again in a minute.');
             }
+
+            // Event not found, but transaction succeeded; use fallback
+            console.warn('DSRCCreated event not detected, verifying via contract state...');
+            const dsrcIdHash = ethers.keccak256(ethers.toUtf8Bytes(predictedDsrcId));
+            const dsrcAddress = await readContract.dsrcs(dsrcIdHash);
+            if (dsrcAddress !== '0x0000000000000000000000000000000000000000') {
+                console.log('DSRC confirmed in contract state:', { dsrcId: predictedDsrcId, dsrcAddress });
+                dsrcCache.clear();
+                return {
+                    success: true,
+                    transactionHash: tx.hash,
+                    dsrcAddress,
+                    dsrcId: predictedDsrcId,
+                    receipt
+                };
+            }
+
+            // If neither event nor state confirms success, assume failure
+            console.error('Transaction succeeded but DSRC not registered');
+            return {
+                success: false,
+                error: 'DSRC creation failed: Unable to confirm creation',
+                transactionHash: tx.hash
+            };
         });
     } catch (err) {
         console.error('=== DSRC Creation Error ===', err);
-        // Only return the user-friendly error message, not the full error
         return {
             success: false,
-            error: 'Upload network is busy please try again in a minute.'
+            error: err.message || 'Transaction processing failed'
         };
     }
+};
+
+// Helper function to predict DSRC ID
+const predictDsrcId = async (creator, contract) => {
+    // Get creativeID contract address from factory contract
+    const creativeIDAddress = await contract.creativeID();
+    const creativeIDContract = new Contract(creativeIDAddress, creativeIDAbi, provider);
+    const [userCreativeId, , exists] = await creativeIDContract.getCreativeID(creator);
+    if (!exists) throw new Error('Creator has no creative ID');
+
+    // Calculate yearLastTwo (mimics contract logic)
+    const now = Math.floor(Date.now() / 1000); // Current timestamp in seconds
+    const yearLastTwo = (((now + 43200) / 31536000 + 1970) % 100) | 0;
+
+    // Get current count and predict next
+    const count = Number(await readContract.yearCounts(creator, yearLastTwo));
+    const newCount = count + 1;
+
+    // Format DSRC ID
+    const formattedYear = yearLastTwo.toString().padStart(2, '0');
+    const formattedCount = newCount.toString().padStart(5, '0');
+    return userCreativeId + formattedYear + formattedCount;
 };
 
 export const getNonce = async (userAddress) => {
