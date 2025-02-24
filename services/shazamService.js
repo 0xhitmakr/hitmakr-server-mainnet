@@ -5,6 +5,10 @@ import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
+// Set FFmpeg and FFprobe paths explicitly
+ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
+ffmpeg.setFfprobePath('/usr/bin/ffprobe');
+
 const shazam = new Shazam();
 
 async function convertToValidMp3(inputPath) {
