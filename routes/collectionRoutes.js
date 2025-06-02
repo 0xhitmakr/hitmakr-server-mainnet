@@ -7,9 +7,15 @@ import {
   addDSRCToCollection,
   removeDSRCFromCollection,
   reorderDSRCs,
+  updateDSRCWeights,
   getCollectionsByCreator,
+  getCollectionsByDSRC,
   getTopCollections,
-  updateCollectionStats
+  deployCollectionContract,
+  updateDSRCAuthorization,
+  recordCollectionRevenue,
+  distributeCollectionRevenue,
+  getCollectionEarnings
 } from '../controllers/collectionController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 
@@ -22,17 +28,17 @@ const router = express.Router();
  * @body    {
  *            title: String (required),
  *            description: String,
- *            creator: String (required),
+ *            creator: String (required), // Should match authenticated user
  *            collectionType: String (required) - 'album', 'mixtape', or 'pack',
- *            childDSRCs: Array,
+ *            initialDsrcs: Array - [{ dsrcId, contractAddress, title, uploadHash, order, weight }],
  *            metadata: Object,
- *            revenueRecipients: Array (required),
+ *            revenueRecipients: Array,
  *            streamingTheme: String - 'Forge', 'Elysium', or 'Default',
- *            contractAddress: String (required),
- *            chain: String (required),
- *            tokenURI: String (required),
  *            collectorEditionPrice: String (required),
- *            licensingEditionPrice: String (required)
+ *            licensingEditionPrice: String (required),
+ *            isPublished: Boolean,
+ *            distributionType: String - 'EVEN', 'WEIGHTED', 'CUSTOM',
+ *            chain: String
  *          }
  */
 router.post('/', authMiddleware, createCollection);
@@ -57,9 +63,13 @@ router.get('/:collectionId', getCollection);
  *            metadata: Object,
  *            revenueRecipients: Array,
  *            streamingTheme: String - 'Forge', 'Elysium', or 'Default',
- *            tokenURI: String,
+ *            collectorEditionPrice: String,
+ *            licensingEditionPrice: String,
  *            coverArtUrl: String,
- *            isPublished: Boolean
+ *            releaseDate: Date,
+ *            isPublished: Boolean,
+ *            isActive: Boolean,
+ *            distributionType: String - 'EVEN', 'WEIGHTED', or 'CUSTOM'
  *          }
  */
 router.put('/:collectionId', authMiddleware, updateCollection);
@@ -81,7 +91,9 @@ router.delete('/:collectionId', authMiddleware, deleteCollection);
  *            dsrcId: String (required),
  *            title: String (required),
  *            uploadHash: String (required),
- *            order: Number
+ *            contractAddress: String,
+ *            order: Number,
+ *            weight: Number
  *          }
  */
 router.post('/:collectionId/dsrcs', authMiddleware, addDSRCToCollection);
@@ -107,6 +119,17 @@ router.delete('/:collectionId/dsrcs/:dsrcId', authMiddleware, removeDSRCFromColl
 router.put('/:collectionId/dsrcs/reorder', authMiddleware, reorderDSRCs);
 
 /**
+ * @route   PUT /api/collections/:collectionId/dsrcs/weights
+ * @desc    Update DSRC weights for weighted distribution
+ * @access  Private
+ * @param   collectionId - Collection ID
+ * @body    {
+ *            weights: Object (required) - { dsrcId: weight, ... }
+ *          }
+ */
+router.put('/:collectionId/dsrcs/weights', authMiddleware, updateDSRCWeights);
+
+/**
  * @route   GET /api/collections/creator/:creator
  * @desc    Get collections by creator
  * @access  Public
@@ -115,6 +138,14 @@ router.put('/:collectionId/dsrcs/reorder', authMiddleware, reorderDSRCs);
  * @query   limit - Results per page (default: 20, max: 100)
  */
 router.get('/creator/:creator', getCollectionsByCreator);
+
+/**
+ * @route   GET /api/collections/dsrc/:dsrcId
+ * @desc    Get collections containing a specific DSRC
+ * @access  Public
+ * @param   dsrcId - DSRC ID
+ */
+router.get('/dsrc/:dsrcId', getCollectionsByDSRC);
 
 /**
  * @route   GET /api/collections/top
@@ -126,16 +157,51 @@ router.get('/creator/:creator', getCollectionsByCreator);
 router.get('/top', getTopCollections);
 
 /**
- * @route   PUT /api/collections/:collectionId/stats
- * @desc    Update collection stats
+ * @route   POST /api/collections/:collectionId/deploy
+ * @desc    Deploy collection to blockchain
+ * @access  Private
+ * @param   collectionId - Collection ID
+ */
+router.post('/:collectionId/deploy', authMiddleware, deployCollectionContract);
+
+/**
+ * @route   POST /api/collections/:collectionId/dsrcs/:dsrcId/authorize
+ * @desc    Authorize DSRC to receive royalties from collection
+ * @access  Private
+ * @param   collectionId - Collection ID
+ * @param   dsrcId - DSRC ID
+ * @body    {
+ *            isAuthorized: Boolean (required)
+ *          }
+ */
+router.post('/:collectionId/dsrcs/:dsrcId/authorize', authMiddleware, updateDSRCAuthorization);
+
+/**
+ * @route   POST /api/collections/:collectionId/revenue
+ * @desc    Record revenue for a collection
  * @access  Private
  * @param   collectionId - Collection ID
  * @body    {
- *            plays: Number,
- *            likes: Number,
- *            collectors: Number
+ *            amount: Number (required) - Amount of revenue
+ *            source: String - Source of revenue
  *          }
  */
-router.put('/:collectionId/stats', authMiddleware, updateCollectionStats);
+router.post('/:collectionId/revenue', authMiddleware, recordCollectionRevenue);
+
+/**
+ * @route   POST /api/collections/:collectionId/distribute
+ * @desc    Distribute collection revenue to DSRCs
+ * @access  Private
+ * @param   collectionId - Collection ID
+ */
+router.post('/:collectionId/distribute', authMiddleware, distributeCollectionRevenue);
+
+/**
+ * @route   GET /api/collections/:collectionId/earnings
+ * @desc    Get collection earnings
+ * @access  Private
+ * @param   collectionId - Collection ID
+ */
+router.get('/:collectionId/earnings', authMiddleware, getCollectionEarnings);
 
 export default router;

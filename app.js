@@ -23,6 +23,10 @@ import songRoutes from "./routes/songRoutes.js";
 import userRoutes from './routes/userRoutes.js';
 import collectionRoutes from './routes/collectionRoutes.js';
 import vaultRoutes from './routes/vaultRoutes.js';
+import starsRoutes from './routes/starsRoutes.js';
+import snipsRoutes from './routes/snipsRoutes.js';
+import streamingStatsRoutes from './routes/streamingStatsRoutes.js';
+import hashtagRoutes from './routes/hashtagRoutes.js';
 
 dotenv.config();
 
@@ -141,7 +145,11 @@ const apiRoutes = [
   { path: '/song', router: songRoutes },
   { path: '/user', router: userRoutes },
   { path: '/collections', router: collectionRoutes },
-  { path: '/vault', router: vaultRoutes }
+  { path: '/vault', router: vaultRoutes },
+  { path: '/stars', router: starsRoutes },
+  { path: '/snips', router: snipsRoutes },
+  { path: '/streaming-stats', router: streamingStatsRoutes },
+  { path: '/hashtags', router: hashtagRoutes }
 ];
 
 apiRoutes.forEach(({ path, router }) => {
