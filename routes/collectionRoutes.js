@@ -17,7 +17,7 @@ import {
   distributeCollectionRevenue,
   getCollectionEarnings
 } from '../controllers/collectionController.js';
-import { authMiddleware } from '../middleware/authMiddleware.js';
+import { verifyToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -32,7 +32,7 @@ const router = express.Router();
  *            collectionType: String (required) - 'album', 'mixtape', or 'pack',
  *            initialDsrcs: Array - [{ dsrcId, contractAddress, title, uploadHash, order, weight }],
  *            metadata: Object,
- *            revenueRecipients: Array,
+ *            revenueRecipients: Array, // For future direct collection splits, not primary now
  *            streamingTheme: String - 'Forge', 'Elysium', or 'Default',
  *            collectorEditionPrice: String (required),
  *            licensingEditionPrice: String (required),
@@ -41,7 +41,7 @@ const router = express.Router();
  *            chain: String
  *          }
  */
-router.post('/', authMiddleware, createCollection);
+router.post('/', verifyToken, createCollection);
 
 /**
  * @route   GET /api/collections/:collectionId
@@ -61,7 +61,7 @@ router.get('/:collectionId', getCollection);
  *            description: String,
  *            collectionType: String - 'album', 'mixtape', or 'pack',
  *            metadata: Object,
- *            revenueRecipients: Array,
+ *            revenueRecipients: Array, // For future direct collection splits
  *            streamingTheme: String - 'Forge', 'Elysium', or 'Default',
  *            collectorEditionPrice: String,
  *            licensingEditionPrice: String,
@@ -72,7 +72,7 @@ router.get('/:collectionId', getCollection);
  *            distributionType: String - 'EVEN', 'WEIGHTED', or 'CUSTOM'
  *          }
  */
-router.put('/:collectionId', authMiddleware, updateCollection);
+router.put('/:collectionId', verifyToken, updateCollection);
 
 /**
  * @route   DELETE /api/collections/:collectionId
@@ -80,7 +80,7 @@ router.put('/:collectionId', authMiddleware, updateCollection);
  * @access  Private
  * @param   collectionId - Collection ID
  */
-router.delete('/:collectionId', authMiddleware, deleteCollection);
+router.delete('/:collectionId', verifyToken, deleteCollection);
 
 /**
  * @route   POST /api/collections/:collectionId/dsrcs
@@ -91,12 +91,12 @@ router.delete('/:collectionId', authMiddleware, deleteCollection);
  *            dsrcId: String (required),
  *            title: String (required),
  *            uploadHash: String (required),
- *            contractAddress: String,
+ *            contractAddress: String, // DSRC contract address
  *            order: Number,
- *            weight: Number
+ *            weight: Number // For weighted distribution
  *          }
  */
-router.post('/:collectionId/dsrcs', authMiddleware, addDSRCToCollection);
+router.post('/:collectionId/dsrcs', verifyToken, addDSRCToCollection);
 
 /**
  * @route   DELETE /api/collections/:collectionId/dsrcs/:dsrcId
@@ -105,7 +105,7 @@ router.post('/:collectionId/dsrcs', authMiddleware, addDSRCToCollection);
  * @param   collectionId - Collection ID
  * @param   dsrcId - DSRC ID
  */
-router.delete('/:collectionId/dsrcs/:dsrcId', authMiddleware, removeDSRCFromCollection);
+router.delete('/:collectionId/dsrcs/:dsrcId', verifyToken, removeDSRCFromCollection);
 
 /**
  * @route   PUT /api/collections/:collectionId/dsrcs/reorder
@@ -116,7 +116,7 @@ router.delete('/:collectionId/dsrcs/:dsrcId', authMiddleware, removeDSRCFromColl
  *            orderedDsrcIds: Array (required) - Array of DSRC IDs in desired order
  *          }
  */
-router.put('/:collectionId/dsrcs/reorder', authMiddleware, reorderDSRCs);
+router.put('/:collectionId/dsrcs/reorder', verifyToken, reorderDSRCs);
 
 /**
  * @route   PUT /api/collections/:collectionId/dsrcs/weights
@@ -127,7 +127,7 @@ router.put('/:collectionId/dsrcs/reorder', authMiddleware, reorderDSRCs);
  *            weights: Object (required) - { dsrcId: weight, ... }
  *          }
  */
-router.put('/:collectionId/dsrcs/weights', authMiddleware, updateDSRCWeights);
+router.put('/:collectionId/dsrcs/weights', verifyToken, updateDSRCWeights);
 
 /**
  * @route   GET /api/collections/creator/:creator
@@ -162,7 +162,7 @@ router.get('/top', getTopCollections);
  * @access  Private
  * @param   collectionId - Collection ID
  */
-router.post('/:collectionId/deploy', authMiddleware, deployCollectionContract);
+router.post('/:collectionId/deploy', verifyToken, deployCollectionContract);
 
 /**
  * @route   POST /api/collections/:collectionId/dsrcs/:dsrcId/authorize
@@ -174,11 +174,11 @@ router.post('/:collectionId/deploy', authMiddleware, deployCollectionContract);
  *            isAuthorized: Boolean (required)
  *          }
  */
-router.post('/:collectionId/dsrcs/:dsrcId/authorize', authMiddleware, updateDSRCAuthorization);
+router.post('/:collectionId/dsrcs/:dsrcId/authorize', verifyToken, updateDSRCAuthorization);
 
 /**
  * @route   POST /api/collections/:collectionId/revenue
- * @desc    Record revenue for a collection
+ * @desc    Record revenue for a collection (off-chain for now, or to trigger on-chain deposit)
  * @access  Private
  * @param   collectionId - Collection ID
  * @body    {
@@ -186,22 +186,22 @@ router.post('/:collectionId/dsrcs/:dsrcId/authorize', authMiddleware, updateDSRC
  *            source: String - Source of revenue
  *          }
  */
-router.post('/:collectionId/revenue', authMiddleware, recordCollectionRevenue);
+router.post('/:collectionId/revenue', verifyToken, recordCollectionRevenue);
 
 /**
  * @route   POST /api/collections/:collectionId/distribute
- * @desc    Distribute collection revenue to DSRCs
+ * @desc    Distribute collection revenue to DSRCs (triggers on-chain distribution)
  * @access  Private
  * @param   collectionId - Collection ID
  */
-router.post('/:collectionId/distribute', authMiddleware, distributeCollectionRevenue);
+router.post('/:collectionId/distribute', verifyToken, distributeCollectionRevenue);
 
 /**
  * @route   GET /api/collections/:collectionId/earnings
- * @desc    Get collection earnings
+ * @desc    Get collection earnings (off-chain and potentially on-chain)
  * @access  Private
  * @param   collectionId - Collection ID
  */
-router.get('/:collectionId/earnings', authMiddleware, getCollectionEarnings);
+router.get('/:collectionId/earnings', verifyToken, getCollectionEarnings);
 
 export default router;

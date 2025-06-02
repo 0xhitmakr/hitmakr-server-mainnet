@@ -8,20 +8,15 @@ import {
     getCollectionOnChainEarnings // Assuming this will be added to the service stub
 } from '../services/collectionContractService.js';
 
-// Admin middleware (re-using from other controllers or defining here if not global)
-const adminMiddleware = (req, res, next) => {
-  if (!req.user || !req.user.isAdmin) {
-    return res.status(403).json({ error: 'Unauthorized: Admin access required' });
-  }
-  next();
-};
-
 // Helper to check if user is creator or admin
 const isCreatorOrAdmin = (req, collection) => {
-  if (!req.user || !collection || !collection.creator) {
+  // Use req.headers['x-user-address'] for consistency with dsrcController.js
+  const userAddress = req.headers['x-user-address'];
+  if (!userAddress || !collection || !collection.creator) {
     return false;
   }
-  return req.user.walletAddress.toLowerCase() === collection.creator.toLowerCase() || req.user.isAdmin;
+  // Only check if the user is the creator, as req.user.isAdmin is not provided by authMiddleware
+  return userAddress.toLowerCase() === collection.creator.toLowerCase();
 };
 
 /**
@@ -66,8 +61,14 @@ export const createCollection = [
         return res.status(400).json({ errors: errors.array() });
       }
 
+      // Use req.headers['x-user-address'] for consistency with dsrcController.js
+      const userAddress = req.headers['x-user-address'];
+      if (!userAddress) {
+        return res.status(401).json({ error: 'Unauthorized: User address required in headers' });
+      }
+
       // Verify creator matches authenticated user
-      if (req.user.walletAddress.toLowerCase() !== req.body.creator.toLowerCase()) {
+      if (userAddress.toLowerCase() !== req.body.creator.toLowerCase()) {
         return res.status(403).json({ error: 'Unauthorized: Creator address does not match authenticated user' });
       }
 
@@ -205,7 +206,7 @@ export const updateCollection = [
 
       // Verify creator or admin
       if (!isCreatorOrAdmin(req, collection)) {
-        return res.status(403).json({ error: 'Unauthorized: Only the creator or admin can update this collection' });
+        return res.status(403).json({ error: 'Unauthorized: Only the creator can update this collection' });
       }
 
       // Verify revenue recipients total 100% if provided
@@ -269,7 +270,7 @@ export const deleteCollection = [
 
       // Verify creator or admin
       if (!isCreatorOrAdmin(req, collection)) {
-        return res.status(403).json({ error: 'Unauthorized: Only the creator or admin can delete this collection' });
+        return res.status(403).json({ error: 'Unauthorized: Only the creator can delete this collection' });
       }
 
       // Don't allow deletion if deployed to blockchain
@@ -332,7 +333,7 @@ export const addDSRCToCollection = [
 
       // Verify creator or admin
       if (!isCreatorOrAdmin(req, collection)) {
-        return res.status(403).json({ error: 'Unauthorized: Only the creator or admin can modify this collection' });
+        return res.status(403).json({ error: 'Unauthorized: Only the creator can modify this collection' });
       }
 
       // Add DSRC to collection
@@ -387,7 +388,7 @@ export const removeDSRCFromCollection = [
 
       // Verify creator or admin
       if (!isCreatorOrAdmin(req, collection)) {
-        return res.status(403).json({ error: 'Unauthorized: Only the creator or admin can modify this collection' });
+        return res.status(403).json({ error: 'Unauthorized: Only the creator can modify this collection' });
       }
 
       // Remove DSRC from collection
@@ -438,7 +439,7 @@ export const reorderDSRCs = [
 
       // Verify creator or admin
       if (!isCreatorOrAdmin(req, collection)) {
-        return res.status(403).json({ error: 'Unauthorized: Only the creator or admin can modify this collection' });
+        return res.status(403).json({ error: 'Unauthorized: Only the creator can modify this collection' });
       }
 
       // Reorder DSRCs
@@ -488,7 +489,7 @@ export const updateDSRCWeights = [
 
       // Verify creator or admin
       if (!isCreatorOrAdmin(req, collection)) {
-        return res.status(403).json({ error: 'Unauthorized: Only the creator or admin can modify this collection' });
+        return res.status(403).json({ error: 'Unauthorized: Only the creator can modify this collection' });
       }
 
       // Validate weights
@@ -653,7 +654,7 @@ export const deployCollectionContract = [
 
       // Verify creator or admin
       if (!isCreatorOrAdmin(req, collection)) {
-        return res.status(403).json({ error: 'Unauthorized: Only the creator or admin can deploy this collection' });
+        return res.status(403).json({ error: 'Unauthorized: Only the creator can deploy this collection' });
       }
 
       // Check if already deployed
@@ -745,7 +746,7 @@ export const updateDSRCAuthorization = [
 
       // Verify creator or admin
       if (!isCreatorOrAdmin(req, collection)) {
-        return res.status(403).json({ error: 'Unauthorized: Only the creator or admin can update DSRC authorization' });
+        return res.status(403).json({ error: 'Unauthorized: Only the creator can update DSRC authorization' });
       }
 
       // Check if collection is deployed
@@ -832,7 +833,7 @@ export const recordCollectionRevenue = [
 
       // Only admin or creator can record revenue
       if (!isCreatorOrAdmin(req, collection)) {
-        return res.status(403).json({ error: 'Unauthorized: Only the creator or admin can record revenue' });
+        return res.status(403).json({ error: 'Unauthorized: Only the creator can record revenue' });
       }
 
       // Record revenue
@@ -886,7 +887,7 @@ export const distributeCollectionRevenue = [
 
       // Only admin or creator can distribute revenue
       if (!isCreatorOrAdmin(req, collection)) {
-        return res.status(403).json({ error: 'Unauthorized: Only the creator or admin can distribute revenue' });
+        return res.status(403).json({ error: 'Unauthorized: Only the creator can distribute revenue' });
       }
 
       // Check if collection is deployed
@@ -963,9 +964,9 @@ export const getCollectionEarnings = [
         return res.status(404).json({ error: 'Collection not found' });
       }
 
-      // Only creator or admin can view earnings
+      // Only creator can view earnings
       if (!isCreatorOrAdmin(req, collection)) {
-        return res.status(403).json({ error: 'Unauthorized: Only the creator or admin can view earnings' });
+        return res.status(403).json({ error: 'Unauthorized: Only the creator can view earnings' });
       }
 
       // Get earnings from DB

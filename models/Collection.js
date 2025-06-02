@@ -409,6 +409,6 @@ collectionSchema.statics.getCollectionsByDSRC = async function(dsrcId) {
 };
 
 // Create the model
-const Collection = mongoose.models.Collection || mongoose.model('Collection', collectionSchema);
+const Collection = mongoose.model('Collection', collectionSchema);
 
 export default Collection;
