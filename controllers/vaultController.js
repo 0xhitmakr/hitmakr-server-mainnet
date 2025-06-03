@@ -35,7 +35,7 @@ export const createProject = [
       });
     } catch (error) {
       console.error('Error creating vault project:', error);
-      res.status(500).json({ error: 'Failed to create project', details: error.message });
+      res.status(500).json({ success: false, message: 'Failed to create project', details: error.message });
     }
   }
 ];
@@ -54,7 +54,7 @@ export const getProject = [
       const project = await VaultProject.findOne({ projectId: req.params.projectId });
       
       if (!project) {
-        return res.status(404).json({ error: 'Project not found' });
+        return res.status(404).json({ success: false, message: 'Project not found' });
       }
 
       // Check if user has access to the project
@@ -64,7 +64,7 @@ export const getProject = [
       );
 
       if (!isCreator && !isCollaborator) {
-        return res.status(403).json({ error: 'Unauthorized: You do not have access to this project' });
+        return res.status(403).json({ success: false, message: 'Unauthorized: You do not have access to this project' });
       }
 
       res.status(200).json({
@@ -73,7 +73,7 @@ export const getProject = [
       });
     } catch (error) {
       console.error('Error fetching project:', error);
-      res.status(500).json({ error: 'Failed to fetch project', details: error.message });
+      res.status(500).json({ success: false, message: 'Failed to fetch project', details: error.message });
     }
   }
 ];
@@ -97,7 +97,7 @@ export const updateMetadata = [
       const project = await VaultProject.findOne({ projectId: req.params.projectId });
       
       if (!project) {
-        return res.status(404).json({ error: 'Project not found' });
+        return res.status(404).json({ success: false, message: 'Project not found' });
       }
 
       // Check if user has edit access
@@ -108,7 +108,7 @@ export const updateMetadata = [
       );
 
       if (!isCreator && !isEditor) {
-        return res.status(403).json({ error: 'Unauthorized: You do not have edit access to this project' });
+        return res.status(403).json({ success: false, message: 'Unauthorized: You do not have edit access to this project' });
       }
 
       // Prepare metadata update
@@ -127,7 +127,7 @@ export const updateMetadata = [
       });
     } catch (error) {
       console.error('Error updating project metadata:', error);
-      res.status(500).json({ error: 'Failed to update project metadata', details: error.message });
+      res.status(500).json({ success: false, message: 'Failed to update project metadata', details: error.message });
     }
   }
 ];
@@ -155,7 +155,7 @@ export const uploadAudio = [
       const project = await VaultProject.findOne({ projectId: req.params.projectId });
       
       if (!project) {
-        return res.status(404).json({ error: 'Project not found' });
+        return res.status(404).json({ success: false, message: 'Project not found' });
       }
 
       // Check if user has edit access
@@ -166,7 +166,7 @@ export const uploadAudio = [
       );
 
       if (!isCreator && !isEditor) {
-        return res.status(403).json({ error: 'Unauthorized: You do not have edit access to this project' });
+        return res.status(403).json({ success: false, message: 'Unauthorized: You do not have edit access to this project' });
       }
 
       // Prepare audio file data
@@ -191,7 +191,7 @@ export const uploadAudio = [
       });
     } catch (error) {
       console.error('Error uploading audio file:', error);
-      res.status(500).json({ error: 'Failed to upload audio file', details: error.message });
+      res.status(500).json({ success: false, message: 'Failed to upload audio file', details: error.message });
     }
   }
 ];
@@ -215,7 +215,7 @@ export const processFingerprintCheck = [
       const project = await VaultProject.findOne({ projectId: req.params.projectId });
       
       if (!project) {
-        return res.status(404).json({ error: 'Project not found' });
+        return res.status(404).json({ success: false, message: 'Project not found' });
       }
 
       // Fingerprint check can be run by system or by users with edit access
@@ -227,7 +227,7 @@ export const processFingerprintCheck = [
         );
 
         if (!isCreator && !isEditor) {
-          return res.status(403).json({ error: 'Unauthorized: You do not have edit access to this project' });
+          return res.status(403).json({ success: false, message: 'Unauthorized: You do not have edit access to this project' });
         }
       }
 
@@ -251,7 +251,7 @@ export const processFingerprintCheck = [
       });
     } catch (error) {
       console.error('Error processing fingerprint check:', error);
-      res.status(500).json({ error: 'Failed to process fingerprint check', details: error.message });
+      res.status(500).json({ success: false, message: 'Failed to process fingerprint check', details: error.message });
     }
   }
 ];
@@ -281,7 +281,7 @@ export const updateLicensing = [
       const project = await VaultProject.findOne({ projectId: req.params.projectId });
       
       if (!project) {
-        return res.status(404).json({ error: 'Project not found' });
+        return res.status(404).json({ success: false, message: 'Project not found' });
       }
 
       // Check if user has edit access
@@ -292,7 +292,7 @@ export const updateLicensing = [
       );
 
       if (!isCreator && !isEditor) {
-        return res.status(403).json({ error: 'Unauthorized: You do not have edit access to this project' });
+        return res.status(403).json({ success: false, message: 'Unauthorized: You do not have edit access to this project' });
       }
 
       // Prepare licensing data
@@ -312,7 +312,7 @@ export const updateLicensing = [
       });
     } catch (error) {
       console.error('Error updating licensing settings:', error);
-      res.status(500).json({ error: 'Failed to update licensing settings', details: error.message });
+      res.status(500).json({ success: false, message: 'Failed to update licensing settings', details: error.message });
     }
   }
 ];
@@ -343,7 +343,7 @@ export const updateReleaseSettings = [
       const project = await VaultProject.findOne({ projectId: req.params.projectId });
       
       if (!project) {
-        return res.status(404).json({ error: 'Project not found' });
+        return res.status(404).json({ success: false, message: 'Project not found' });
       }
 
       // Check if user has edit access
@@ -354,7 +354,7 @@ export const updateReleaseSettings = [
       );
 
       if (!isCreator && !isEditor) {
-        return res.status(403).json({ error: 'Unauthorized: You do not have edit access to this project' });
+        return res.status(403).json({ success: false, message: 'Unauthorized: You do not have edit access to this project' });
       }
 
       // Prepare release data
@@ -375,7 +375,7 @@ export const updateReleaseSettings = [
       });
     } catch (error) {
       console.error('Error updating release settings:', error);
-      res.status(500).json({ error: 'Failed to update release settings', details: error.message });
+      res.status(500).json({ success: false, message: 'Failed to update release settings', details: error.message });
     }
   }
 ];
@@ -399,7 +399,7 @@ export const updateRevenueSplits = [
       const project = await VaultProject.findOne({ projectId: req.params.projectId });
       
       if (!project) {
-        return res.status(404).json({ error: 'Project not found' });
+        return res.status(404).json({ success: false, message: 'Project not found' });
       }
 
       // Check if user has edit access
@@ -409,7 +409,7 @@ export const updateRevenueSplits = [
       );
 
       if (!isCreator && !isAdmin) {
-        return res.status(403).json({ error: 'Unauthorized: Only the creator or admin collaborators can update revenue splits' });
+        return res.status(403).json({ success: false, message: 'Unauthorized: Only the creator or admin collaborators can update revenue splits' });
       }
 
       // Update revenue splits
@@ -423,7 +423,7 @@ export const updateRevenueSplits = [
       });
     } catch (error) {
       console.error('Error updating revenue splits:', error);
-      res.status(500).json({ error: 'Failed to update revenue splits', details: error.message });
+      res.status(500).json({ success: false, message: 'Failed to update revenue splits', details: error.message });
     }
   }
 ];
@@ -445,20 +445,20 @@ export const convertToDSRC = [
       const project = await VaultProject.findOne({ projectId: req.params.projectId });
       
       if (!project) {
-        return res.status(404).json({ error: 'Project not found' });
+        return res.status(404).json({ success: false, message: 'Project not found' });
       }
 
       // Check if user has permission to convert
       const isCreator = project.creator.toLowerCase() === req.user.walletAddress.toLowerCase();
       if (!isCreator) {
-        return res.status(403).json({ error: 'Unauthorized: Only the creator can convert this project to a DSRC' });
+        return res.status(403).json({ success: false, message: 'Unauthorized: Only the creator can convert this project to a DSRC' });
       }
 
       // Check if project is eligible for conversion
       if (!project.dsrcConversion.isEligible) {
         return res.status(400).json({ 
-          error: 'Project is not eligible for conversion', 
-          issues: project.dsrcConversion.eligibilityIssues 
+          success: false, message: 'Project is not eligible for conversion',
+          details: { issues: project.dsrcConversion.eligibilityIssues }
         });
       }
 
@@ -480,7 +480,7 @@ export const convertToDSRC = [
       });
     } catch (error) {
       console.error('Error converting project to DSRC:', error);
-      res.status(500).json({ error: 'Failed to convert project to DSRC', details: error.message });
+      res.status(500).json({ success: false, message: 'Failed to convert project to DSRC', details: error.message });
     }
   }
 ];
@@ -508,7 +508,7 @@ export const getProjectsByCreator = [
 
       // Check if user is requesting their own projects or has admin access
       if (req.user.walletAddress.toLowerCase() !== creator && !req.user.isAdmin) {
-        return res.status(403).json({ error: 'Unauthorized: You can only view your own projects' });
+        return res.status(403).json({ success: false, message: 'Unauthorized: You can only view your own projects' });
       }
 
       // Prepare filters
@@ -526,7 +526,7 @@ export const getProjectsByCreator = [
       });
     } catch (error) {
       console.error('Error fetching projects by creator:', error);
-      res.status(500).json({ error: 'Failed to fetch projects', details: error.message });
+      res.status(500).json({ success: false, message: 'Failed to fetch projects', details: error.message });
     }
   }
 ];
@@ -555,7 +555,7 @@ export const getProjectsByCollaborator = [
       });
     } catch (error) {
       console.error('Error fetching projects by collaborator:', error);
-      res.status(500).json({ error: 'Failed to fetch projects', details: error.message });
+      res.status(500).json({ success: false, message: 'Failed to fetch projects', details: error.message });
     }
   }
 ];
@@ -575,7 +575,7 @@ export const archiveProject = [
       const project = await VaultProject.findOne({ projectId: req.params.projectId });
       
       if (!project) {
-        return res.status(404).json({ error: 'Project not found' });
+        return res.status(404).json({ success: false, message: 'Project not found' });
       }
 
       // Check if user has permission to archive
@@ -585,7 +585,7 @@ export const archiveProject = [
       );
 
       if (!isCreator && !isAdmin) {
-        return res.status(403).json({ error: 'Unauthorized: Only the creator or admin collaborators can archive this project' });
+        return res.status(403).json({ success: false, message: 'Unauthorized: Only the creator or admin collaborators can archive this project' });
       }
 
       // Archive the project
@@ -601,7 +601,7 @@ export const archiveProject = [
       });
     } catch (error) {
       console.error('Error archiving project:', error);
-      res.status(500).json({ error: 'Failed to archive project', details: error.message });
+      res.status(500).json({ success: false, message: 'Failed to archive project', details: error.message });
     }
   }
 ];
@@ -623,7 +623,7 @@ export const addCollaborator = [
       const project = await VaultProject.findOne({ projectId: req.params.projectId });
       
       if (!project) {
-        return res.status(404).json({ error: 'Project not found' });
+        return res.status(404).json({ success: false, message: 'Project not found' });
       }
 
       // Check if user has permission to add collaborators
@@ -633,7 +633,7 @@ export const addCollaborator = [
       );
 
       if (!isCreator && !isAdmin) {
-        return res.status(403).json({ error: 'Unauthorized: Only the creator or admin collaborators can add collaborators' });
+        return res.status(403).json({ success: false, message: 'Unauthorized: Only the creator or admin collaborators can add collaborators' });
       }
 
       // Prepare collaborator data
@@ -653,7 +653,7 @@ export const addCollaborator = [
       });
     } catch (error) {
       console.error('Error adding collaborator:', error);
-      res.status(500).json({ error: 'Failed to add collaborator', details: error.message });
+      res.status(500).json({ success: false, message: 'Failed to add collaborator', details: error.message });
     }
   }
 ];
@@ -674,7 +674,7 @@ export const removeCollaborator = [
       const project = await VaultProject.findOne({ projectId: req.params.projectId });
       
       if (!project) {
-        return res.status(404).json({ error: 'Project not found' });
+        return res.status(404).json({ success: false, message: 'Project not found' });
       }
 
       // Check if user has permission to remove collaborators
@@ -685,7 +685,7 @@ export const removeCollaborator = [
       const isSelfRemoval = req.user.walletAddress.toLowerCase() === req.params.walletAddress.toLowerCase();
 
       if (!isCreator && !isAdmin && !isSelfRemoval) {
-        return res.status(403).json({ error: 'Unauthorized: Only the creator, admin collaborators, or the collaborator themselves can remove a collaborator' });
+        return res.status(403).json({ success: false, message: 'Unauthorized: Only the creator, admin collaborators, or the collaborator themselves can remove a collaborator' });
       }
 
       // Remove collaborator
@@ -702,7 +702,7 @@ export const removeCollaborator = [
       });
     } catch (error) {
       console.error('Error removing collaborator:', error);
-      res.status(500).json({ error: 'Failed to remove collaborator', details: error.message });
+      res.status(500).json({ success: false, message: 'Failed to remove collaborator', details: error.message });
     }
   }
 ];
@@ -727,7 +727,7 @@ export const updateCartridgeVisual = [
       const project = await VaultProject.findOne({ projectId: req.params.projectId });
       
       if (!project) {
-        return res.status(404).json({ error: 'Project not found' });
+        return res.status(404).json({ success: false, message: 'Project not found' });
       }
 
       // Check if user has edit access
@@ -738,7 +738,7 @@ export const updateCartridgeVisual = [
       );
 
       if (!isCreator && !isEditor) {
-        return res.status(403).json({ error: 'Unauthorized: You do not have edit access to this project' });
+        return res.status(403).json({ success: false, message: 'Unauthorized: You do not have edit access to this project' });
       }
 
       // Update cartridge visual
@@ -751,7 +751,7 @@ export const updateCartridgeVisual = [
       });
     } catch (error) {
       console.error('Error updating cartridge visual:', error);
-      res.status(500).json({ error: 'Failed to update cartridge visual', details: error.message });
+      res.status(500).json({ success: false, message: 'Failed to update cartridge visual', details: error.message });
     }
   }
 ];
@@ -782,7 +782,7 @@ export const searchProjects = [
       });
     } catch (error) {
       console.error('Error searching projects:', error);
-      res.status(500).json({ error: 'Failed to search projects', details: error.message });
+      res.status(500).json({ success: false, message: 'Failed to search projects', details: error.message });
     }
   }
 ];

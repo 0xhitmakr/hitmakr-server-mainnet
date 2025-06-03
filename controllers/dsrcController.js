@@ -162,7 +162,7 @@ export async function createDSRC(req, res) {
 
    } catch (error) {
        console.error('CreateDSRC error:', error);
-       res.status(500).json({success: false, message: error.message});
+       res.status(500).json({success: false, message: "An unexpected error occurred while creating DSRC.", details: error.message});
    }
 }
 
@@ -184,7 +184,7 @@ export async function getDSRCById(req, res) {
        });
    } catch (error) {
        console.error('GetDSRCById error:', error);
-       res.status(500).json({success: false, message: error.message});
+       res.status(500).json({success: false, message: "An unexpected error occurred while fetching DSRC by ID.", details: error.message});
    }
 }
 
@@ -225,7 +225,7 @@ export async function getDSRCsByCreator(req, res) {
        });
    } catch (error) {
        console.error('GetDSRCsByCreator error:', error);
-       res.status(500).json({success: false, message: error.message});
+       res.status(500).json({success: false, message: "An unexpected error occurred while fetching DSRCs by creator.", details: error.message});
    }
 }
 
@@ -257,7 +257,7 @@ export async function getDSRCByAddress(req, res) {
        });
    } catch (error) {
        console.error('GetDSRCByAddress error:', error);
-       res.status(500).json({success: false, message: error.message});
+       res.status(500).json({success: false, message: "An unexpected error occurred while fetching DSRC by address.", details: error.message});
    }
 }
 
@@ -289,6 +289,6 @@ export async function getDSRCsByChain(req, res) {
        });
    } catch (error) {
        console.error('GetDSRCsByChain error:', error);
-       res.status(500).json({success: false, message: error.message});
+       res.status(500).json({success: false, message: "An unexpected error occurred while fetching DSRCs by chain.", details: error.message});
    }
 }

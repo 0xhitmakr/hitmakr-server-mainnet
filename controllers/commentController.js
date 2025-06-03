@@ -8,13 +8,13 @@ export async function createComment(req, res) {
 
     if (!userAddress || !dsrcId || !content) {
       return res.status(400).json({
-        message: "User address, DSRC ID, and comment content are required.",
+        success: false, message: "User address, DSRC ID, and comment content are required.",
       });
     }
 
     const song = await Song.findOne({ dsrcId });
     if (!song) {
-      return res.status(404).json({ message: "DSRC not found." });
+      return res.status(404).json({ success: false, message: "DSRC not found." });
     }
 
     const newComment = await Comment.createComment(
@@ -38,11 +38,11 @@ export async function createComment(req, res) {
   } catch (error) {
     console.error("Error creating comment:", error);
     if (error.message.includes("maximum length")) {
-      return res.status(400).json({ message: error.message });
+      return res.status(400).json({ success: false, message: error.message });
     }
     return res
       .status(500)
-      .json({ message: "Error creating comment. Please try again." });
+      .json({ success: false, message: "Error creating comment. Please try again.", details: error.message });
   }
 }
 
@@ -54,13 +54,13 @@ export async function getDSRCComments(req, res) {
 
     if (!dsrcId) {
       return res.status(400).json({
-        message: "DSRC ID is required.",
+        success: false, message: "DSRC ID is required.",
       });
     }
 
     const songExists = await Song.exists({ dsrcId });
     if (!songExists) {
-      return res.status(404).json({ message: "DSRC not found." });
+      return res.status(404).json({ success: false, message: "DSRC not found." });
     }
 
     const commentsData = await Comment.getDSRCComments(dsrcId, page, limit);
@@ -78,7 +78,7 @@ export async function getDSRCComments(req, res) {
     });
   } catch (error) {
     console.error("Error fetching DSRC comments:", error);
-    res.status(500).json({ message: "Error fetching DSRC comments." });
+    res.status(500).json({ success: false, message: "Error fetching DSRC comments.", details: error.message });
   }
 }
 
@@ -90,7 +90,7 @@ export async function getUserComments(req, res) {
 
     if (!userAddress) {
       return res.status(400).json({
-        message: "User address is required.",
+        success: false, message: "User address is required.",
       });
     }
 
@@ -140,7 +140,7 @@ export async function getUserComments(req, res) {
     });
   } catch (error) {
     console.error("Error fetching user comments:", error);
-    res.status(500).json({ message: "Error fetching user comments." });
+    res.status(500).json({ success: false, message: "Error fetching user comments.", details: error.message });
   }
 }
 
@@ -189,7 +189,7 @@ export async function getTopCommentedDSRCs(req, res) {
     });
   } catch (error) {
     console.error("Error fetching top commented DSRCs:", error);
-    res.status(500).json({ message: "Error fetching top commented DSRCs." });
+    res.status(500).json({ success: false, message: "Error fetching top commented DSRCs.", details: error.message });
   }
 }
 
@@ -199,20 +199,20 @@ export async function getDSRCCommentCount(req, res) {
 
     if (!dsrcId) {
       return res.status(400).json({
-        message: "DSRC ID is required.",
+        success: false, message: "DSRC ID is required.",
       });
     }
 
     const songExists = await Song.exists({ dsrcId });
     if (!songExists) {
-      return res.status(404).json({ message: "DSRC not found." });
+      return res.status(404).json({ success: false, message: "DSRC not found." });
     }
 
     const counts = await Comment.getDSRCCommentCount(dsrcId);
     res.json(counts);
   } catch (error) {
     console.error("Error fetching DSRC comment count:", error);
-    res.status(500).json({ message: "Error fetching DSRC comment count." });
+    res.status(500).json({ success: false, message: "Error fetching DSRC comment count.", details: error.message });
   }
 }
 
@@ -222,7 +222,7 @@ export async function getMultipleDSRCCommentCounts(req, res) {
 
     if (!Array.isArray(dsrcIds) || dsrcIds.length === 0) {
       return res.status(400).json({
-        message: "Array of DSRC IDs is required.",
+        success: false, message: "Array of DSRC IDs is required.",
       });
     }
 
@@ -237,7 +237,7 @@ export async function getMultipleDSRCCommentCounts(req, res) {
 
     if (nonExistingDsrcIds.length > 0) {
       return res.status(404).json({
-        message: "Some DSRCs not found",
+        success: false, message: "Some DSRCs not found",
         nonExistingDsrcIds,
       });
     }
@@ -248,7 +248,7 @@ export async function getMultipleDSRCCommentCounts(req, res) {
     console.error("Error fetching multiple DSRC comment counts:", error);
     res
       .status(500)
-      .json({ message: "Error fetching multiple DSRC comment counts." });
+      .json({ success: false, message: "Error fetching multiple DSRC comment counts.", details: error.message });
   }
 }
 
@@ -259,7 +259,7 @@ export async function deleteComment(req, res) {
 
     if (!userAddress || !commentId) {
       return res.status(400).json({
-        message: "User address and comment ID are required.",
+        success: false, message: "User address and comment ID are required.",
       });
     }
 
@@ -274,12 +274,12 @@ export async function deleteComment(req, res) {
   } catch (error) {
     console.error("Error deleting comment:", error);
     if (error.message === "Comment not found") {
-      return res.status(404).json({ message: error.message });
+      return res.status(404).json({ success: false, message: error.message });
     }
     if (error.message === "Unauthorized to delete this comment") {
-      return res.status(403).json({ message: error.message });
+      return res.status(403).json({ success: false, message: error.message });
     }
-    res.status(500).json({ message: "Error deleting comment." });
+    res.status(500).json({ success: false, message: "Error deleting comment.", details: error.message });
   }
 }
 
@@ -289,7 +289,7 @@ export async function getUserCommentsCount(req, res) {
 
     if (!userAddress) {
       return res.status(400).json({
-        message: "User address is required.",
+        success: false, message: "User address is required.",
       });
     }
 
@@ -298,6 +298,6 @@ export async function getUserCommentsCount(req, res) {
     res.json({ totalComments });
   } catch (error) {
     console.error("Error fetching user comments count:", error);
-    res.status(500).json({ message: "Error fetching user comments count." });
+    res.status(500).json({ success: false, message: "Error fetching user comments count.", details: error.message });
   }
 }

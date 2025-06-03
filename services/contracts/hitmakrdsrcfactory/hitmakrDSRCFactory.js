@@ -4,6 +4,8 @@ import {
     getAddress,
     isAddress,
     Interface,
+    keccak256,
+    toUtf8Bytes,
 } from 'ethers';
 import abi from './abi/abi.json' with { type: 'json' };
 import controlCenterAbi from "../controlcenter/abi/controlcenterabi.json" with { type: 'json' };
@@ -166,7 +168,7 @@ export const verifierCreateDSRC = async (dsrcData) => {
 
             // Event not found, but transaction succeeded; use fallback
             console.warn('DSRCCreated event not detected, verifying via contract state...');
-            const dsrcIdHash = ethers.keccak256(ethers.toUtf8Bytes(predictedDsrcId));
+            const dsrcIdHash = keccak256(toUtf8Bytes(predictedDsrcId));
             const dsrcAddress = await readContract.dsrcs(dsrcIdHash);
             if (dsrcAddress !== '0x0000000000000000000000000000000000000000') {
                 console.log('DSRC confirmed in contract state:', { dsrcId: predictedDsrcId, dsrcAddress });

@@ -17,7 +17,7 @@ import {
   updateCartridgeVisual,
   searchProjects
 } from '../controllers/vaultController.js';
-import { authMiddleware } from '../middleware/authMiddleware.js';
+import { verifyToken as authMiddleware } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 

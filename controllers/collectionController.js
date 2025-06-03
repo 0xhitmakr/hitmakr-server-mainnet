@@ -26,11 +26,11 @@ export const createCollection = [
 
       const userAddress = req.headers["x-user-address"];
       if (!userAddress) {
-        return res.status(401).json({ error: "Unauthorized: User address required in headers" });
+        return res.status(401).json({ success: false, message: "Unauthorized: User address required in headers" });
       }
 
       if (userAddress.toLowerCase() !== req.body.creator.toLowerCase()) {
-        return res.status(403).json({ error: "Unauthorized: Creator address does not match authenticated user" });
+        return res.status(403).json({ success: false, message: "Unauthorized: Creator address does not match authenticated user" });
       }
 
       const collectionId = `col_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
@@ -56,7 +56,7 @@ export const createCollection = [
       });
     } catch (error) {
       console.error("Error creating collection:", error);
-      res.status(500).json({ error: "Failed to create collection", details: error.message });
+      res.status(500).json({ success: false, message: "Failed to create collection", details: error.message });
     }
   }
 ];
@@ -74,7 +74,7 @@ export const getCollection = [
       const collection = await Collection.findOne({ collectionId: req.params.collectionId });
       
       if (!collection) {
-        return res.status(404).json({ error: 'Collection not found' });
+        return res.status(404).json({ success: false, message: 'Collection not found' });
       }
 
       res.status(200).json({
@@ -83,7 +83,7 @@ export const getCollection = [
       });
     } catch (error) {
       console.error('Error fetching collection:', error);
-      res.status(500).json({ error: 'Failed to fetch collection', details: error.message });
+      res.status(500).json({ success: false, message: 'Failed to fetch collection', details: error.message });
     }
   }
 ];
@@ -110,7 +110,7 @@ export const getCollectionsByCreator = [
       });
     } catch (error) {
       console.error('Error fetching collections by creator:', error);
-      res.status(500).json({ error: 'Failed to fetch collections', details: error.message });
+      res.status(500).json({ success: false, message: 'Failed to fetch collections', details: error.message });
     }
   }
 ];
