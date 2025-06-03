@@ -22,6 +22,7 @@ import commentRoutes from './routes/commentRoutes.js';
 import songRoutes from "./routes/songRoutes.js";
 import userRoutes from './routes/userRoutes.js';
 import collectionRoutes from './routes/collectionRoutes.js';
+import vaultRoutes from './routes/vaultRoutes.js';
 
 dotenv.config();
 
@@ -139,7 +140,8 @@ const apiRoutes = [
   { path: '/comment', router: commentRoutes },
   { path: '/song', router: songRoutes },
   { path: '/user', router: userRoutes },
-  { path: '/collections', router: collectionRoutes }
+  { path: '/collections', router: collectionRoutes },
+  { path: '/vault', router: vaultRoutes }
 ];
 
 apiRoutes.forEach(({ path, router }) => {
